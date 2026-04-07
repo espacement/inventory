@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+{% block header_title %}Номенклатура{% endblock %}
+{% block header_sub %}{{ items|length }} позиций{% endblock %}
+{% block header_right %}
+  <a href="{{ url_for('nom_form') }}" class="btn btn-primary btn-sm">➕ Добавить</a>
+{% endblock %}
+
+{% block content %}
+
+<form method="get" class="searchbar">
+  <input type="text" name="q" value="{{ search }}" placeholder="🔍 Поиск по названию..." autocomplete="off">
+  {% if low_f %}<input type="hidden" name="low" value="1">{% endif %}
+  <button type="submit" class="btn btn-primary">Найти</button>
+</form>
+
+<div class="chips">
+  <a href="{{ url_for('nom_list', q=search) }}" class="chip {{ 'active' if not low_f }}">Все</a>
+  <a href="{{ url_for('nom_list', q=search, low=1) }}" class="chip {{ 'active' if low_f }}">⚠️ Низкий остаток</a>
+</div>
+
+{% if items %}
+<div class="list" style="align-items:stretch">
+  {% for it in items %}
+  {% set is_low  = it.min_qty > 0 and it.quantity <= it.min_qty %}
+  {% set is_warn = it.min_qty > 0 and it.quantity <= it.min_qty * 1.5 and not is_low %}
+  <div style="background:var(--surf);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;display:flex;flex-direction:column">
+
+    {# ── Верхняя часть — ссылка ── #}
+    <a href="{{ url_for('nom_detail', nom_id=it.id) }}"
+       style="display:flex;gap:12px;align-items:flex-start;padding:14px;
+              text-decoration:none;color:inherit;flex:1">
+
+      <div style="font-size:26px;flex-shrink:0;width:40px;text-align:center">🗂</div>
+
+      <div style="flex:1;min-width:0">
+        {% if it.code %}
+          <div style="font-size:10px;color:var(--muted);font-weight:700;
+                      letter-spacing:.06em;text-transform:uppercase">{{ it.code }}</div>
+        {% endif %}
+        <div style="font-size:15px;font-weight:700;white-space:nowrap;
+                    overflow:hidden;text-overflow:ellipsis">{{ it.name }}</div>
+        {% if it.description %}
+          <div style="font-size:12px;color:var(--muted);margin-top:1px;
+                      white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ it.description }}</div>
+        {% endif %}
+        {% if is_low %}
+          <span class="badge badge-low" style="margin-top:5px;display:inline-block">⚠️ Мало</span>
+        {% endif %}
+      </div>
+
+      <div style="flex-shrink:0;text-align:right;min-width:48px">
+        <div style="font-size:22px;font-weight:800;line-height:1;
+                    color:{{ 'var(--red)' if is_low else 'var(--yellow)' if is_warn else 'var(--green)' }}">
+          {{ it.quantity|int if it.quantity == it.quantity|int else it.quantity }}
+        </div>
+        <div style="font-size:11px;color:var(--muted);margin-top:2px">{{ it.unit }}</div>
+        {% if it.min_qty > 0 %}
+          <div style="font-size:10px;color:var(--muted)">мин: {{ it.min_qty|int if it.min_qty == it.min_qty|int else it.min_qty }}</div>
+        {% endif %}
+      </div>
+    </a>
+
+    {# ── Нижняя полоска — кнопки ── #}
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;
+                border-top:1px solid var(--border)">
+
+      <a href="{{ url_for('nom_form', nom_id=it.id) }}"
+         style="display:flex;align-items:center;justify-content:center;gap:5px;
+                padding:9px 6px;font-size:12px;font-weight:700;text-decoration:none;
+                color:var(--text);background:transparent;
+                border-right:1px solid var(--border)">
+        ✏️ Изменить
+      </a>
+
+      <a href="{{ url_for('mov_add', nom_id=it.id) }}"
+         style="display:flex;align-items:center;justify-content:center;gap:5px;
+                padding:9px 6px;font-size:12px;font-weight:700;text-decoration:none;
+                color:var(--green);background:transparent;
+                border-right:1px solid var(--border)">
+        📤 Движение
+      </a>
+
+      <form method="POST" action="{{ url_for('nom_delete', nom_id=it.id) }}"
+            onsubmit="return confirm('Удалить «{{ it.name }}»?')" style="display:contents">
+        <button type="submit"
+                style="display:flex;align-items:center;justify-content:center;gap:5px;
+                       padding:9px 6px;font-size:12px;font-weight:700;cursor:pointer;
+                       color:#f87171;background:transparent;border:none;width:100%">
+          🗑 Удалить
+        </button>
+      </form>
+
+    </div>
+  </div>
+  {% endfor %}
+</div>
+
+{% else %}
+<div class="empty">
+  <div class="icon">🗂</div>
+  <p>{% if search or low_f %}Ничего не найдено{% else %}Номенклатура пуста{% endif %}</p>
+  {% if not search and not low_f %}
+    <a href="{{ url_for('nom_form') }}" class="btn btn-primary">➕ Добавить первую позицию</a>
+  {% endif %}
+</div>
+{% endif %}
+
+{% endblock %}

@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+{% set is_edit = item and item['id'] %}
+{% block header_title %}{{ 'Редактировать' if is_edit else 'Новый предмет' }}{% endblock %}
+{% block header_sub %}Физическое имущество{% endblock %}
+{% block header_right %}
+  <a href="{{ url_for('index') }}" class="btn btn-ghost btn-sm">← Назад</a>
+{% endblock %}
+
+{% block content %}
+<div class="card">
+  <form method="POST" enctype="multipart/form-data">
+
+    <div class="form-g">
+      <label>Инвентарный номер *</label>
+      <input type="text" name="inv_num" value="{{ item.inv_num if item else '' }}"
+             placeholder="00123456" required autofocus>
+    </div>
+
+    <div class="form-g">
+      <label>Наименование *</label>
+      <input type="text" name="name" value="{{ item.name if item else '' }}"
+             placeholder="Монитор Dell, Стул офисный..." required>
+    </div>
+
+    <div class="form-g">
+      <label>Местонахождение</label>
+      <input type="text" name="location" value="{{ item.location if item else '' }}"
+             placeholder="Кабинет 101, Склад...">
+    </div>
+
+    <div class="form-g">
+      <label>Статус</label>
+      <div class="rgroup">
+        {% set cur = item.status if item else 'active' %}
+        {% set icons = {'active':'✅','broken':'🔴','repair':'🔧','writeoff':'🗑','reserved':'🔒'} %}
+        {% set lbls  = {'active':'Активен','broken':'Сломан','repair':'В ремонте','writeoff':'На списание','reserved':'Зарезервирован'} %}
+        {% for k in ['active','broken','repair','writeoff','reserved'] %}
+          <input type="radio" name="status" id="s_{{k}}" value="{{k}}" class="ropt" {{ 'checked' if cur==k }}>
+          <label for="s_{{k}}">{{ icons[k] }} {{ lbls[k] }}</label>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="form-g">
+      <label>Комментарий</label>
+      <textarea name="comment" placeholder="Заметки о состоянии...">{{ item.comment if item else '' }}</textarea>
+    </div>
+
+    <div class="form-g">
+      <label>Фото</label>
+      {% if is_edit and item.photo %}
+        <img src="{{ url_for('static', filename='uploads/' + item.photo) }}"
+             style="width:100%;max-height:160px;object-fit:cover;border-radius:8px;margin-bottom:8px">
+      {% endif %}
+      <input type="file" id="pfi" name="photo" accept="image/*" capture="environment"
+             style="display:none" onchange="prevPhoto(this)">
+      <button type="button" class="btn btn-ghost btn-full"
+              onclick="document.getElementById('pfi').click()">
+        📷 {{ 'Заменить фото' if is_edit and item.photo else 'Сделать / выбрать фото' }}
+      </button>
+      <img id="pprev" class="photo-prev" src="" alt="">
+    </div>
+
+    <div style="display:flex;gap:8px;margin-top:4px">
+      <a href="{{ url_for('index') }}" class="btn btn-ghost" style="flex:1;justify-content:center">Отмена</a>
+      <button type="submit" class="btn btn-primary" style="flex:2">
+        {{ '💾 Сохранить' if is_edit else '➕ Добавить' }}
+      </button>
+    </div>
+  </form>
+</div>
+
+{% if is_edit %}
+<div style="margin-top:10px">
+  <form method="POST" action="{{ url_for('item_delete', item_id=item.id) }}"
+        onsubmit="return confirm('Удалить «{{ item.name }}»?')">
+    <button type="submit" class="btn btn-red btn-full">🗑 Удалить предмет</button>
+  </form>
+</div>
+{% endif %}
+
+<script>
+function prevPhoto(input){
+  const p=document.getElementById('pprev');
+  if(input.files&&input.files[0]){
+    const r=new FileReader();
+    r.onload=e=>{p.src=e.target.result;p.classList.add('show')};
+    r.readAsDataURL(input.files[0]);
+  }
+}
+</script>
+{% endblock %}

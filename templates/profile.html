@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+{% block header_title %}Профиль{% endblock %}
+{% block header_sub %}{{ user.username }}{% endblock %}
+
+{% block content %}
+
+{# ── Аватар и имя ── #}
+<div class="card" style="text-align:center;padding:24px 16px">
+  <div style="width:72px;height:72px;border-radius:50%;background:linear-gradient(135deg,var(--accent),#a855f7);
+              display:flex;align-items:center;justify-content:center;font-size:30px;
+              margin:0 auto 12px">
+    {{ (user.display_name or user.username)[0].upper() }}
+  </div>
+  <div style="font-size:20px;font-weight:800">{{ user.display_name or user.username }}</div>
+  <div style="font-size:13px;color:var(--muted);margin-top:2px">@{{ user.username }}</div>
+  <div style="font-size:11px;color:var(--muted);margin-top:4px">
+    Аккаунт с {{ user.created_at[:10] }}
+  </div>
+
+  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:18px">
+    <div style="background:var(--bg);border-radius:8px;padding:10px;border:1px solid var(--border)">
+      <div style="font-size:22px;font-weight:800;color:var(--acc2)">{{ stats.items_count }}</div>
+      <div style="font-size:11px;color:var(--muted)">Предметов</div>
+    </div>
+    <div style="background:var(--bg);border-radius:8px;padding:10px;border:1px solid var(--border)">
+      <div style="font-size:22px;font-weight:800;color:var(--green)">{{ stats.nom }}</div>
+      <div style="font-size:11px;color:var(--muted)">Номенклатур</div>
+    </div>
+    <div style="background:var(--bg);border-radius:8px;padding:10px;border:1px solid var(--border)">
+      <div style="font-size:22px;font-weight:800;color:var(--orange)">{{ stats.mov }}</div>
+      <div style="font-size:11px;color:var(--muted)">Документов</div>
+    </div>
+  </div>
+</div>
+
+{# ── Изменить имя ── #}
+<div class="card" style="margin-top:10px">
+  <div style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;
+              letter-spacing:.05em;margin-bottom:12px">Отображаемое имя</div>
+  <form method="POST">
+    <input type="hidden" name="action" value="rename">
+    <div style="display:flex;gap:8px">
+      <input type="text" name="display_name" value="{{ user.display_name or '' }}"
+             placeholder="Иван Петров"
+             style="flex:1;background:var(--bg);border:1px solid var(--border);
+                    border-radius:8px;color:var(--text);padding:10px 12px;font-size:15px;outline:none">
+      <button type="submit" class="btn btn-ghost btn-sm">Сохранить</button>
+    </div>
+  </form>
+</div>
+
+{# ── Сменить пароль ── #}
+<div class="card" style="margin-top:10px">
+  <div style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;
+              letter-spacing:.05em;margin-bottom:12px">Смена пароля</div>
+  <form method="POST">
+    <input type="hidden" name="action" value="password">
+    <div class="form-g">
+      <label>Текущий пароль</label>
+      <input type="password" name="old_password" placeholder="••••••" required>
+    </div>
+    <div class="form-g">
+      <label>Новый пароль</label>
+      <input type="password" name="new_password" placeholder="min 4 символа" required>
+    </div>
+    <div class="form-g">
+      <label>Повторите новый</label>
+      <input type="password" name="new_password2" placeholder="••••••" required>
+    </div>
+    <button type="submit" class="btn btn-ghost btn-full">🔑 Сменить пароль</button>
+  </form>
+</div>
+
+{# ── Экспорт / Импорт ── #}
+<div class="card" style="margin-top:10px">
+  <div style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;
+              letter-spacing:.05em;margin-bottom:12px">💾 Резервная копия</div>
+
+  <a href="{{ url_for('export_json') }}" class="btn btn-green btn-full" style="margin-bottom:10px">
+    📤 Экспорт данных (JSON)
+  </a>
+  <div style="font-size:11px;color:var(--muted);margin-bottom:14px;text-align:center">
+    Скачать все ваши данные в файл для резервной копии
+  </div>
+
+  <div style="height:1px;background:var(--border);margin-bottom:14px"></div>
+
+  <a href="{{ url_for('import_json') }}" class="btn btn-ghost btn-full">
+    📥 Импорт данных (JSON)
+  </a>
+  <div style="font-size:11px;color:var(--muted);margin-top:6px;text-align:center">
+    Восстановить данные из файла резервной копии
+  </div>
+</div>
+
+{# ── Выйти ── #}
+<div style="margin-top:10px">
+  <a href="{{ url_for('logout') }}" class="btn btn-red btn-full"
+     onclick="return confirm('Выйти из аккаунта?')">
+    🚪 Выйти
+  </a>
+</div>
+
+{% endblock %}

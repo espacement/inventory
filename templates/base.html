@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <title>{% block title %}Склад{% endblock %}</title>
+  <style>
+    :root {
+      --bg:      #0f1117;
+      --surf:    #1a1d27;
+      --surf2:   #222536;
+      --border:  #2a2d3e;
+      --text:    #e2e8f0;
+      --muted:   #64748b;
+      --accent:  #6366f1;
+      --acc2:    #818cf8;
+      --green:   #22c55e;
+      --red:     #ef4444;
+      --orange:  #f97316;
+      --yellow:  #facc15;
+      --purple:  #a78bfa;
+      --r:       12px;
+    }
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;font-size:15px;min-height:100vh;padding-bottom:72px}
+
+    /* ── Header ── */
+    header{background:var(--surf);border-bottom:1px solid var(--border);padding:12px 16px;
+           display:flex;align-items:center;gap:10px;position:sticky;top:0;z-index:100}
+    header .logo{font-size:20px}
+    header h1{font-size:16px;font-weight:800;
+      background:linear-gradient(90deg,var(--acc2),#c4b5fd);
+      -webkit-background-clip:text;-webkit-text-fill-color:transparent}
+    header .sub{font-size:11px;color:var(--muted)}
+    header .hright{margin-left:auto;display:flex;gap:8px}
+
+    /* ── Container ── */
+    .container{padding:14px;max-width:900px;margin:0 auto}
+
+    /* ── Flash ── */
+    .flash{border-radius:var(--r);padding:11px 14px;margin-bottom:12px;
+           font-size:13px;font-weight:600;border:1px solid}
+    .flash.success{background:#052e1633;border-color:#22c55e44;color:#4ade80}
+    .flash.error  {background:#2d0a0a33;border-color:#ef444444;color:#f87171}
+
+    /* ── Buttons ── */
+    .btn{display:inline-flex;align-items:center;gap:6px;padding:9px 16px;
+         border-radius:var(--r);font-size:13px;font-weight:600;cursor:pointer;
+         border:none;text-decoration:none;transition:opacity .15s;white-space:nowrap;
+         -webkit-tap-highlight-color:transparent}
+    .btn:active{opacity:.7}
+    .btn-primary {background:var(--accent);color:#fff}
+    .btn-green   {background:#16803433;color:var(--green);border:1px solid #22c55e33}
+    .btn-red     {background:#7f1d1d33;color:#f87171;border:1px solid #ef444433}
+    .btn-ghost   {background:var(--surf);color:var(--text);border:1px solid var(--border)}
+    .btn-orange  {background:#7c340033;color:var(--orange);border:1px solid #f9731633}
+    .btn-sm{padding:5px 11px;font-size:12px;border-radius:8px}
+    .btn-full{width:100%;justify-content:center;padding:13px}
+
+    /* ── Bottom nav ── */
+    .bnav{position:fixed;bottom:0;left:0;right:0;z-index:200;
+          background:var(--surf);border-top:1px solid var(--border);
+          display:flex;padding:6px 0 max(6px,env(safe-area-inset-bottom))}
+    .bnav a{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;
+            text-decoration:none;color:var(--muted);font-size:10px;font-weight:700;
+            padding:4px 0;letter-spacing:.03em;text-transform:uppercase;
+            transition:color .15s;-webkit-tap-highlight-color:transparent}
+    .bnav a.active{color:var(--acc2)}
+    .bnav a .icon{font-size:20px}
+
+    /* ── Cards ── */
+    .card{background:var(--surf);border:1px solid var(--border);border-radius:var(--r);padding:14px}
+    .card+.card{margin-top:10px}
+
+    /* ── Search + Filters ── */
+    .searchbar{display:flex;gap:8px;margin-bottom:10px}
+    .searchbar input{flex:1;background:var(--surf);border:1px solid var(--border);
+                     border-radius:var(--r);color:var(--text);padding:9px 12px;
+                     font-size:15px;outline:none}
+    .searchbar input:focus{border-color:var(--accent)}
+    .chips{display:flex;gap:7px;overflow-x:auto;padding-bottom:8px;margin-bottom:12px;scrollbar-width:none}
+    .chips::-webkit-scrollbar{display:none}
+    .chip{flex-shrink:0;padding:5px 13px;border-radius:20px;font-size:12px;font-weight:700;
+          cursor:pointer;border:1px solid var(--border);color:var(--muted);
+          background:var(--surf);text-decoration:none;white-space:nowrap;letter-spacing:.03em;
+          -webkit-tap-highlight-color:transparent}
+    .chip.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+
+    /* ── Table-style list ── */
+    .list{display:flex;flex-direction:column;gap:8px}
+    .list-item{background:var(--surf);border:1px solid var(--border);border-radius:var(--r);
+               padding:12px 14px;display:flex;align-items:center;gap:10px;
+               text-decoration:none;color:inherit;-webkit-tap-highlight-color:transparent;
+               transition:border-color .15s}
+    .list-item:active{border-color:var(--accent)}
+    .list-icon{font-size:24px;flex-shrink:0;width:40px;text-align:center}
+    .list-main{flex:1;min-width:0}
+    .list-title{font-weight:700;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .list-sub{font-size:12px;color:var(--muted);margin-top:2px}
+    .list-right{flex-shrink:0;text-align:right}
+    .list-qty{font-size:20px;font-weight:800}
+    .list-unit{font-size:11px;color:var(--muted)}
+
+    /* ── Badge ── */
+    .badge{display:inline-block;padding:3px 10px;border-radius:20px;
+           font-size:11px;font-weight:700;letter-spacing:.06em;white-space:nowrap}
+    .badge-active  {background:#052e1633;color:#4ade80;border:1px solid #22c55e33}
+    .badge-broken  {background:#2d0a0a33;color:#f87171;border:1px solid #ef444433}
+    .badge-repair  {background:#2a1f0033;color:#fde047;border:1px solid #facc1533}
+    .badge-writeoff{background:#1e1e2033;color:#94a3b8;border:1px solid #64748b33}
+    .badge-reserved{background:#1e0a3c33;color:#c4b5fd;border:1px solid #a78bfa33}
+    .badge-receipt {background:#052e1633;color:#4ade80;border:1px solid #22c55e33}
+    .badge-expense {background:#2c120033;color:#fb923c;border:1px solid #f9731633}
+    .badge-writeoff2{background:#2d0a0a33;color:#f87171;border:1px solid #ef444433}
+    .badge-return  {background:#1e0a3c33;color:#c4b5fd;border:1px solid #a78bfa33}
+    .badge-low     {background:#2d0a0a33;color:#f87171;border:1px solid #ef444433}
+    .badge-ok      {background:#052e1633;color:#4ade80;border:1px solid #22c55e33}
+
+    /* ── Stats ── */
+    .stats{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:14px}
+    .stat{background:var(--surf);border:1px solid var(--border);border-radius:var(--r);
+          padding:12px;text-align:center}
+    .stat .n{font-size:26px;font-weight:800}
+    .stat .l{font-size:11px;color:var(--muted);margin-top:2px;font-weight:600}
+
+    /* ── Form ── */
+    .form-g{margin-bottom:14px}
+    .form-g label{display:block;font-size:12px;font-weight:700;color:var(--muted);
+                  margin-bottom:5px;text-transform:uppercase;letter-spacing:.05em}
+    .form-g input,.form-g textarea,.form-g select{
+      width:100%;background:var(--bg);border:1px solid var(--border);
+      border-radius:8px;color:var(--text);padding:10px 13px;font-size:15px;outline:none;
+      font-family:inherit}
+    .form-g input:focus,.form-g textarea:focus,.form-g select:focus{border-color:var(--accent)}
+    .form-g textarea{resize:vertical;min-height:70px}
+    .form-g .hint{font-size:11px;color:var(--muted);margin-top:4px}
+
+    /* Radio status grid */
+    .rgroup{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+    .ropt{display:none}
+    .ropt+label{display:flex;align-items:center;gap:7px;padding:9px 12px;border-radius:8px;
+                cursor:pointer;border:1px solid var(--border);background:var(--bg);
+                font-size:13px;font-weight:600;-webkit-tap-highlight-color:transparent}
+    .ropt:checked+label{border-color:var(--accent);background:#6366f122;color:var(--acc2)}
+
+    /* Movement type selector */
+    .mtype-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+    .mtype-opt{display:none}
+    .mtype-opt+label{display:flex;flex-direction:column;align-items:center;gap:3px;
+                     padding:12px 8px;border-radius:8px;cursor:pointer;
+                     border:1px solid var(--border);background:var(--bg);
+                     font-size:12px;font-weight:700;text-align:center;
+                     -webkit-tap-highlight-color:transparent}
+    .mtype-opt+label .micon{font-size:22px}
+    .mtype-opt:checked+label{border-color:var(--accent);background:#6366f122;color:var(--acc2)}
+
+    /* Photo */
+    .photo-prev{width:100%;max-height:180px;object-fit:cover;border-radius:8px;
+                margin-top:8px;display:none}
+    .photo-prev.show{display:block}
+
+    /* ── Movement timeline ── */
+    .timeline{display:flex;flex-direction:column;gap:0}
+    .tl-item{display:flex;gap:10px;padding:10px 0;
+             border-bottom:1px solid var(--border)}
+    .tl-item:last-child{border-bottom:none}
+    .tl-dot{flex-shrink:0;width:8px;height:8px;border-radius:50%;margin-top:6px}
+    .tl-body{flex:1;min-width:0}
+    .tl-head{display:flex;justify-content:space-between;align-items:center;gap:8px}
+    .tl-type{font-size:12px;font-weight:700}
+    .tl-qty{font-size:15px;font-weight:800}
+    .tl-doc{font-size:11px;color:var(--muted)}
+    .tl-date{font-size:11px;color:var(--muted)}
+    .tl-comment{font-size:12px;color:var(--muted);margin-top:2px;font-style:italic}
+
+    /* ── Report table ── */
+    .rtable{width:100%;border-collapse:collapse;font-size:13px}
+    .rtable th{background:var(--surf2);padding:8px 10px;text-align:left;
+               font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;
+               letter-spacing:.05em;border-bottom:1px solid var(--border)}
+    .rtable td{padding:8px 10px;border-bottom:1px solid var(--border)}
+    .rtable tr:last-child td{border-bottom:none}
+    .rtable tr.low td{background:#2d0a0a22}
+    .num-cell{text-align:right;font-weight:700;font-variant-numeric:tabular-nums}
+    .tbl-wrap{overflow-x:auto;border-radius:var(--r);border:1px solid var(--border)}
+
+    /* ── Empty ── */
+    .empty{text-align:center;padding:50px 20px;color:var(--muted)}
+    .empty .icon{font-size:50px;margin-bottom:10px}
+    .empty p{font-size:15px;margin-bottom:16px}
+
+    /* Qty color */
+    .qty-ok  {color:var(--green)}
+    .qty-low {color:var(--red)}
+    .qty-warn{color:var(--yellow)}
+
+    @media(min-width:600px){
+      .stats{grid-template-columns:repeat(4,1fr)}
+      .list{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <span class="logo">🏭</span>
+  <div>
+    <h1>{% block header_title %}Учёт{% endblock %}</h1>
+    <div class="sub">{% block header_sub %}{% endblock %}</div>
+  </div>
+  <div class="hright">
+    {% block header_right %}{% endblock %}
+    {% if me %}
+    <a href="{{ url_for('profile') }}"
+       style="width:34px;height:34px;border-radius:50%;
+              background:linear-gradient(135deg,var(--accent),#a855f7);
+              display:flex;align-items:center;justify-content:center;
+              font-size:14px;font-weight:800;color:#fff;text-decoration:none;
+              flex-shrink:0;-webkit-tap-highlight-color:transparent">
+      {{ (me.display_name or me.username)[0].upper() }}
+    </a>
+    {% endif %}
+  </div>
+</header>
+
+<div class="container">
+  {% for cat, msg in get_flashed_messages(with_categories=True) %}
+    <div class="flash {{ cat }}">{{ msg }}</div>
+  {% endfor %}
+  {% block content %}{% endblock %}
+</div>
+
+<nav class="bnav">
+  <a href="{{ url_for('index') }}" class="{{ 'active' if request.endpoint == 'index' }}">
+    <span class="icon">📦</span>Имущество
+  </a>
+  <a href="{{ url_for('nom_list') }}" class="{{ 'active' if 'nom' in (request.endpoint or '') }}">
+    <span class="icon">🗂</span>Номенклатура
+  </a>
+  <a href="{{ url_for('mov_list') }}" class="{{ 'active' if 'mov' in (request.endpoint or '') }}">
+    <span class="icon">📄</span>Движения
+  </a>
+  <a href="{{ url_for('reports') }}" class="{{ 'active' if request.endpoint == 'reports' }}">
+    <span class="icon">📊</span>Отчёты
+  </a>
+</nav>
+
+</body>
+</html>

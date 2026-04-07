@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% block header_title %}Физическое имущество{% endblock %}
+{% block header_sub %}{{ items|length }} позиций{% endblock %}
+{% block header_right %}
+  <a href="{{ url_for('item_form') }}" class="btn btn-primary btn-sm">➕ Добавить</a>
+{% endblock %}
+
+{% block content %}
+
+<form method="get" class="searchbar">
+  <input type="text" name="q" value="{{ search }}" placeholder="🔍 Поиск..." autocomplete="off">
+  {% if status_f %}<input type="hidden" name="status" value="{{ status_f }}">{% endif %}
+  <button type="submit" class="btn btn-primary">Найти</button>
+  <a href="{{ url_for('export_items') }}" class="btn btn-green">📊 Excel</a>
+</form>
+
+<div class="chips">
+  <a href="{{ url_for('index', q=search) }}" class="chip {{ 'active' if not status_f }}">Все</a>
+  {% for k, lbl in statuses.items() %}
+    <a href="{{ url_for('index', q=search, status=k) }}" class="chip {{ 'active' if status_f==k }}">{{ lbl }}</a>
+  {% endfor %}
+</div>
+
+{% if not search and not status_f %}
+<div class="stats">
+  <div class="stat">
+    <div class="n" style="color:var(--acc2)">{{ items|length }}</div>
+    <div class="l">Всего</div>
+  </div>
+  <div class="stat">
+    <div class="n" style="color:var(--green)">{{ items|selectattr('status','eq','active')|list|length }}</div>
+    <div class="l">Активных</div>
+  </div>
+  <div class="stat">
+    <div class="n" style="color:var(--red)">{{ items|selectattr('status','eq','broken')|list|length }}</div>
+    <div class="l">Сломано</div>
+  </div>
+  <div class="stat">
+    <div class="n" style="color:var(--muted)">{{ items|selectattr('status','eq','writeoff')|list|length }}</div>
+    <div class="l">На списание</div>
+  </div>
+</div>
+{% endif %}
+
+{% if items %}
+<div class="list">
+  {% for it in items %}
+  <a href="{{ url_for('item_form', item_id=it.id) }}" class="list-item">
+    <div class="list-icon">
+      {% if it.photo %}
+        <img src="{{ url_for('static', filename='uploads/' + it.photo) }}"
+             style="width:40px;height:40px;object-fit:cover;border-radius:8px" loading="lazy">
+      {% else %}📦{% endif %}
+    </div>
+    <div class="list-main">
+      <div style="font-size:10px;color:var(--muted);font-weight:700;letter-spacing:.06em">№ {{ it.inv_num }}</div>
+      <div class="list-title">{{ it.name }}</div>
+      <div class="list-sub">{% if it.location %}📍 {{ it.location }}{% endif %}</div>
+      <div style="margin-top:5px">
+        <span class="badge badge-{{ it.status }}">{{ statuses[it.status] }}</span>
+      </div>
+      {% if it.comment %}
+        <div style="font-size:11px;color:var(--muted);margin-top:3px;font-style:italic">💬 {{ it.comment }}</div>
+      {% endif %}
+    </div>
+  </a>
+  {% endfor %}
+</div>
+{% else %}
+<div class="empty">
+  <div class="icon">📭</div>
+  <p>{% if search or status_f %}Ничего не найдено{% else %}Список пуст{% endif %}</p>
+  {% if not search and not status_f %}
+    <a href="{{ url_for('item_form') }}" class="btn btn-primary">➕ Добавить первый</a>
+  {% endif %}
+</div>
+{% endif %}
+
+{% endblock %}

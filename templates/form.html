@@ -1,0 +1,139 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Редактировать' if item and item.get('id') else 'Добавить' }} — Учёт имущества{% endblock %}
+{% block subtitle %}{{ 'Редактирование предмета' if item and item.get('id') else 'Новый предмет' }}{% endblock %}
+
+{% block content %}
+
+{% set is_edit = item and item.get('id') %}
+
+<div class="form-card">
+  <form method="POST" enctype="multipart/form-data">
+
+    {# ── Инвентарный номер ── #}
+    <div class="form-group">
+      <label>Инвентарный номер *</label>
+      <input type="text" name="inv_num"
+             value="{{ item.inv_num if item else '' }}"
+             placeholder="Например: 00123456"
+             required autofocus>
+    </div>
+
+    {# ── Название ── #}
+    <div class="form-group">
+      <label>Наименование *</label>
+      <input type="text" name="name"
+             value="{{ item.name if item else '' }}"
+             placeholder="Монитор Dell 24&quot;, Системный блок..."
+             required>
+    </div>
+
+    {# ── Местонахождение ── #}
+    <div class="form-group">
+      <label>Местонахождение</label>
+      <input type="text" name="location"
+             value="{{ item.location if item else '' }}"
+             placeholder="Кабинет 101, Серверная...">
+    </div>
+
+    {# ── Статус ── #}
+    <div class="form-group">
+      <label>Статус</label>
+      <div class="status-grid">
+        {% set cur_status = item.status if item else 'active' %}
+
+        {% set status_icons = {
+          'active':   '✅',
+          'broken':   '🔴',
+          'repair':   '🔧',
+          'writeoff': '🗑',
+          'reserved': '🔒'
+        } %}
+        {% set status_labels = {
+          'active':   'Активен',
+          'broken':   'Сломан',
+          'repair':   'В ремонте',
+          'writeoff': 'На списание',
+          'reserved': 'Зарезервирован'
+        } %}
+
+        {% for key in ['active','broken','repair','writeoff','reserved'] %}
+          <input type="radio" name="status" id="s_{{ key }}" value="{{ key }}"
+                 class="status-option"
+                 {{ 'checked' if cur_status == key }}>
+          <label for="s_{{ key }}">
+            {{ status_icons[key] }} {{ status_labels[key] }}
+          </label>
+        {% endfor %}
+      </div>
+    </div>
+
+    {# ── Комментарий ── #}
+    <div class="form-group">
+      <label>Комментарий</label>
+      <textarea name="comment"
+                placeholder="Любые заметки о состоянии, дефектах...">{{ item.comment if item else '' }}</textarea>
+    </div>
+
+    {# ── Фото ── #}
+    <div class="form-group">
+      <label>Фото предмета</label>
+
+      {% if is_edit and item.photo %}
+        <div style="margin-bottom:10px">
+          <img src="{{ url_for('static', filename='uploads/' + item.photo) }}"
+               style="width:100%;max-height:200px;object-fit:cover;border-radius:8px;">
+          <div class="hint">Загрузите новое фото, чтобы заменить текущее</div>
+        </div>
+      {% endif %}
+
+      <input type="file" name="photo" id="photo-input"
+             accept="image/*" capture="environment"
+             style="display:none" onchange="previewPhoto(this)">
+
+      <button type="button" class="btn btn-ghost btn-full"
+              onclick="document.getElementById('photo-input').click()">
+        📷 {{ 'Заменить фото' if is_edit and item.photo else 'Сделать фото / выбрать' }}
+      </button>
+
+      <img id="photo-preview" class="photo-preview" src="" alt="Превью">
+      <div class="hint">Форматы: JPG, PNG, WEBP до 16 МБ</div>
+    </div>
+
+    {# ── Кнопки ── #}
+    <div style="display:flex;gap:10px;margin-top:8px">
+      <a href="{{ url_for('index') }}" class="btn btn-ghost" style="flex:1;justify-content:center">
+        Отмена
+      </a>
+      <button type="submit" class="btn btn-primary" style="flex:2">
+        {{ '💾 Сохранить' if is_edit else '➕ Добавить' }}
+      </button>
+    </div>
+  </form>
+</div>
+
+{# ── Удаление (только при редактировании) ── #}
+{% if is_edit %}
+<div style="margin-top:16px">
+  <form method="POST" action="{{ url_for('delete', item_id=item.id) }}"
+        onsubmit="return confirm('Удалить «{{ item.name }}»? Это действие нельзя отменить.')">
+    <button type="submit" class="btn btn-danger btn-full">
+      🗑 Удалить этот предмет
+    </button>
+  </form>
+</div>
+{% endif %}
+
+<script>
+function previewPhoto(input) {
+  const preview = document.getElementById('photo-preview');
+  if (input.files && input.files[0]) {
+    const reader = new FileReader();
+    reader.onload = e => {
+      preview.src = e.target.result;
+      preview.classList.add('show');
+    };
+    reader.readAsDataURL(input.files[0]);
+  }
+}
+</script>
+{% endblock %}

@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+{% block header_title %}Новый документ{% endblock %}
+{% block header_sub %}Движение товара{% endblock %}
+{% block header_right %}
+  <a href="{{ url_for('mov_list') }}" class="btn btn-ghost btn-sm">← Назад</a>
+{% endblock %}
+
+{% block content %}
+<div class="card">
+  <form method="POST">
+
+    {# Тип движения #}
+    <div class="form-g">
+      <label>Тип движения *</label>
+      <div class="mtype-grid">
+        {% set micons = {'receipt':'📥','expense':'📤','writeoff':'🗑','return':'↩️'} %}
+        {% set mlbls  = {'receipt':'Поступление','expense':'Расход','writeoff':'Списание','return':'Возврат'} %}
+        {% for k in ['receipt','expense','writeoff','return'] %}
+          <input type="radio" name="move_type" id="mt_{{k}}" value="{{k}}" class="mtype-opt"
+                 {{ 'checked' if k == 'expense' }}>
+          <label for="mt_{{k}}">
+            <span class="micon">{{ micons[k] }}</span>
+            {{ mlbls[k] }}
+          </label>
+        {% endfor %}
+      </div>
+    </div>
+
+    {# Номенклатура #}
+    <div class="form-g">
+      <label>Позиция номенклатуры *</label>
+      <select name="nom_id" id="nom_sel" onchange="updateQty(this)" required>
+        <option value="">— выберите —</option>
+        {% for n in nom_items %}
+          <option value="{{ n.id }}"
+                  data-qty="{{ n.quantity }}" data-unit="{{ n.unit }}"
+                  {{ 'selected' if preselect and preselect|int == n.id }}>
+            {{ n.name }}{% if n.code %} ({{ n.code }}){% endif %}
+          </option>
+        {% endfor %}
+      </select>
+      <div id="qty-hint" class="hint"></div>
+    </div>
+
+    {# Количество #}
+    <div class="form-g">
+      <label>Количество *</label>
+      <input type="number" name="quantity" id="qty_input"
+             step="0.01" min="0.01" placeholder="1" required>
+      <div id="unit-hint" class="hint"></div>
+    </div>
+
+    {# Комментарий #}
+    <div class="form-g">
+      <label>Комментарий / причина</label>
+      <textarea name="comment" placeholder="Например: потрачено на ремонт кабинета 101..."></textarea>
+    </div>
+
+    <div style="display:flex;gap:8px;margin-top:4px">
+      <a href="{{ url_for('mov_list') }}" class="btn btn-ghost" style="flex:1;justify-content:center">Отмена</a>
+      <button type="submit" class="btn btn-primary" style="flex:2">📄 Провести документ</button>
+    </div>
+  </form>
+</div>
+
+<script>
+function updateQty(sel){
+  const opt = sel.options[sel.selectedIndex];
+  const qty  = opt.dataset.qty;
+  const unit = opt.dataset.unit;
+  const hint = document.getElementById('qty-hint');
+  const uh   = document.getElementById('unit-hint');
+  if(qty !== undefined){
+    hint.textContent = `Текущий остаток: ${parseFloat(qty)} ${unit}`;
+    uh.textContent   = `Единица: ${unit}`;
+  } else {
+    hint.textContent = '';
+    uh.textContent   = '';
+  }
+}
+// Инициализация если preselect
+window.onload = () => {
+  const sel = document.getElementById('nom_sel');
+  if(sel.value) updateQty(sel);
+};
+</script>
+{% endblock %}

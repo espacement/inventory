@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+{% block header_title %}Отчёты{% endblock %}
+{% block header_sub %}Складской учёт{% endblock %}
+
+{% block content %}
+
+{# ── Период ── #}
+<form method="get" style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap">
+  <div style="display:flex;gap:6px;align-items:center;flex:1;min-width:220px">
+    <input type="date" name="date_from" value="{{ date_from }}"
+           style="flex:1;background:var(--surf);border:1px solid var(--border);
+                  border-radius:8px;color:var(--text);padding:8px 10px;font-size:14px;outline:none">
+    <span style="color:var(--muted)">—</span>
+    <input type="date" name="date_to" value="{{ date_to }}"
+           style="flex:1;background:var(--surf);border:1px solid var(--border);
+                  border-radius:8px;color:var(--text);padding:8px 10px;font-size:14px;outline:none">
+  </div>
+  <button type="submit" class="btn btn-ghost">Применить</button>
+  <a href="{{ url_for('report_export', date_from=date_from, date_to=date_to) }}"
+     class="btn btn-green">📊 Excel</a>
+</form>
+
+{# ── Статы ── #}
+<div class="stats">
+  <div class="stat">
+    <div class="n" style="color:var(--acc2)">{{ summary|length }}</div>
+    <div class="l">Позиций</div>
+  </div>
+  <div class="stat">
+    <div class="n" style="color:var(--green)">
+      {{ summary|selectattr('total_receipt')|sum(attribute='total_receipt')|int }}
+    </div>
+    <div class="l">Приход (всего)</div>
+  </div>
+  <div class="stat">
+    <div class="n" style="color:var(--orange)">
+      {{ summary|selectattr('total_expense')|sum(attribute='total_expense')|int }}
+    </div>
+    <div class="l">Расход (всего)</div>
+  </div>
+  <div class="stat">
+    {% set low_count = namespace(c=0) %}
+    {% for row in summary %}{% if row.min_qty > 0 and row.current_qty <= row.min_qty %}{% set low_count.c = low_count.c + 1 %}{% endif %}{% endfor %}
+    <div class="n" style="color:var(--red)">{{ low_count.c }}</div>
+    <div class="l">⚠️ Ниже мин.</div>
+  </div>
+</div>
+
+{# ── Таблица отчёта ── #}
+<div style="font-size:12px;color:var(--muted);font-weight:700;text-transform:uppercase;
+            letter-spacing:.05em;margin-bottom:8px">
+  Оборот за период {{ date_from }} — {{ date_to }}
+</div>
+
+<div class="tbl-wrap">
+  <table class="rtable">
+    <thead>
+      <tr>
+        <th>Наименование</th>
+        <th class="num-cell">📥 Приход</th>
+        <th class="num-cell">📤 Расход</th>
+        <th class="num-cell">🗑 Списание</th>
+        <th class="num-cell">Остаток</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for row in summary %}
+      {% set is_low = row.min_qty > 0 and row.current_qty <= row.min_qty %}
+      <tr class="{{ 'low' if is_low }}">
+        <td>
+          <a href="{{ url_for('nom_detail', nom_id=loop.index) }}"
+             style="color:inherit;text-decoration:none;font-weight:600">
+            {{ row.name }}
+          </a>
+          <div style="font-size:11px;color:var(--muted)">{{ row.unit }}</div>
+          {% if is_low %}
+            <span class="badge badge-low" style="font-size:9px;padding:1px 6px">⚠️ Мало</span>
+          {% endif %}
+        </td>
+        <td class="num-cell" style="color:var(--green)">
+          {{ (row.total_receipt or 0)|int if (row.total_receipt or 0) == (row.total_receipt or 0)|int else (row.total_receipt or 0) }}
+        </td>
+        <td class="num-cell" style="color:var(--orange)">
+          {{ (row.total_expense or 0)|int if (row.total_expense or 0) == (row.total_expense or 0)|int else (row.total_expense or 0) }}
+        </td>
+        <td class="num-cell" style="color:var(--red)">
+          {{ (row.total_writeoff or 0)|int if (row.total_writeoff or 0) == (row.total_writeoff or 0)|int else (row.total_writeoff or 0) }}
+        </td>
+        <td class="num-cell" style="font-size:16px;font-weight:800;
+            color:{{ 'var(--red)' if is_low else 'var(--green)' }}">
+          {{ row.current_qty|int if row.current_qty == row.current_qty|int else row.current_qty }}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+{% endblock %}

@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% block header_title %}{{ item.name }}{% endblock %}
+{% block header_sub %}{{ item.code or 'без кода' }} · {{ item.unit }}{% endblock %}
+{% block header_right %}
+  <a href="{{ url_for('nom_form', nom_id=item.id) }}" class="btn btn-ghost btn-sm">✏️ Изменить</a>
+{% endblock %}
+
+{% block content %}
+
+{# ── Текущий остаток ── #}
+{% set is_low = item.min_qty > 0 and item.quantity <= item.min_qty %}
+<div class="card" style="text-align:center;padding:24px">
+  <div style="font-size:11px;color:var(--muted);font-weight:700;letter-spacing:.08em;text-transform:uppercase;margin-bottom:6px">
+    Текущий остаток
+  </div>
+  <div style="font-size:52px;font-weight:900;color:{{ 'var(--red)' if is_low else 'var(--green)' }}">
+    {{ item.quantity | int if item.quantity == item.quantity|int else item.quantity }}
+  </div>
+  <div style="font-size:16px;color:var(--muted);margin-top:2px">{{ item.unit }}</div>
+  {% if is_low %}
+    <div style="margin-top:8px">
+      <span class="badge badge-low">⚠️ Ниже минимума ({{ item.min_qty }} {{ item.unit }})</span>
+    </div>
+  {% endif %}
+  {% if item.description %}
+    <div style="font-size:13px;color:var(--muted);margin-top:10px">{{ item.description }}</div>
+  {% endif %}
+</div>
+
+{# ── Кнопка создать движение ── #}
+<a href="{{ url_for('mov_add', nom_id=item.id) }}" class="btn btn-primary btn-full" style="margin-top:10px">
+  📄 Создать движение
+</a>
+
+{# ── История движений ── #}
+{% if moves %}
+<div class="card" style="margin-top:10px">
+  <div style="font-size:13px;font-weight:700;color:var(--muted);margin-bottom:12px;
+              text-transform:uppercase;letter-spacing:.05em">История движений</div>
+  <div class="timeline">
+    {% set dot_colors = {'receipt':'#22c55e','expense':'#f97316','writeoff':'#ef4444','return':'#a78bfa'} %}
+    {% for m in moves %}
+    <div class="tl-item">
+      <div class="tl-dot" style="background:{{ dot_colors.get(m.move_type,'#64748b') }}"></div>
+      <div class="tl-body">
+        <div class="tl-head">
+          <div>
+            <span class="tl-type">{{ move_types[m.move_type][0] if m.move_type in move_types else m.move_type }}</span>
+            <span class="tl-doc" style="margin-left:6px">{{ m.doc_num }}</span>
+          </div>
+          <div>
+            <span class="tl-qty" style="color:{{ dot_colors.get(m.move_type,'#64748b') }}">
+              {{ '+' if m.move_type in ('receipt','return') else '−' }}{{ m.quantity | int if m.quantity == m.quantity|int else m.quantity }}
+            </span>
+          </div>
+        </div>
+        <div class="tl-date">{{ m.created_at[:16] }}</div>
+        {% if m.comment %}
+          <div class="tl-comment">💬 {{ m.comment }}</div>
+        {% endif %}
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% else %}
+<div style="text-align:center;padding:30px;color:var(--muted);font-size:14px;margin-top:10px">
+  Движений пока нет
+</div>
+{% endif %}
+
+{% endblock %}

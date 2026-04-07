@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <title>{% if mode=='login' %}Вход{% else %}Регистрация{% endif %} — Склад</title>
+  <style>
+    :root{--bg:#0f1117;--surf:#1a1d27;--border:#2a2d3e;--text:#e2e8f0;--muted:#64748b;
+          --accent:#6366f1;--acc2:#818cf8;--red:#ef4444;--green:#22c55e;--r:12px}
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{background:var(--bg);color:var(--text);
+         font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+         min-height:100vh;display:flex;flex-direction:column;align-items:center;
+         justify-content:center;padding:20px}
+    .logo{font-size:48px;margin-bottom:8px;text-align:center}
+    .title{font-size:22px;font-weight:900;text-align:center;margin-bottom:4px;
+           background:linear-gradient(90deg,var(--acc2),#c4b5fd);
+           -webkit-background-clip:text;-webkit-text-fill-color:transparent}
+    .subtitle{font-size:13px;color:var(--muted);text-align:center;margin-bottom:28px}
+    .card{background:var(--surf);border:1px solid var(--border);border-radius:var(--r);
+          padding:24px;width:100%;max-width:360px}
+    .flash{border-radius:8px;padding:10px 14px;margin-bottom:14px;
+           font-size:13px;font-weight:600;border:1px solid}
+    .flash.error{background:#2d0a0a33;border-color:#ef444444;color:#f87171}
+    .flash.success{background:#052e1633;border-color:#22c55e44;color:#4ade80}
+    .form-g{margin-bottom:14px}
+    .form-g label{display:block;font-size:11px;font-weight:700;color:var(--muted);
+                  margin-bottom:5px;text-transform:uppercase;letter-spacing:.05em}
+    .form-g input{width:100%;background:var(--bg);border:1px solid var(--border);
+                  border-radius:8px;color:var(--text);padding:11px 14px;
+                  font-size:15px;outline:none;font-family:inherit}
+    .form-g input:focus{border-color:var(--accent)}
+    .btn{display:block;width:100%;padding:13px;border-radius:var(--r);
+         font-size:15px;font-weight:700;cursor:pointer;border:none;
+         background:var(--accent);color:#fff;margin-top:4px;
+         -webkit-tap-highlight-color:transparent}
+    .btn:active{opacity:.8}
+    .switch{text-align:center;margin-top:16px;font-size:13px;color:var(--muted)}
+    .switch a{color:var(--acc2);text-decoration:none;font-weight:600}
+    .divider{display:flex;align-items:center;gap:10px;margin:16px 0}
+    .divider span{flex:1;height:1px;background:var(--border)}
+    .divider p{font-size:11px;color:var(--muted);font-weight:600;white-space:nowrap}
+  </style>
+</head>
+<body>
+
+<div class="logo">🏭</div>
+<div class="title">Учёт имущества</div>
+<div class="subtitle">Складской учёт и инвентаризация</div>
+
+<div class="card">
+  {% with msgs = get_flashed_messages(with_categories=True) %}
+    {% for cat, msg in msgs %}
+      <div class="flash {{ cat }}">{{ msg }}</div>
+    {% endfor %}
+  {% endwith %}
+
+  {% if mode == 'login' %}
+    <form method="POST" action="{{ url_for('login') }}">
+      <div class="form-g">
+        <label>Логин</label>
+        <input type="text" name="username" placeholder="ваш_логин" required autofocus autocomplete="username">
+      </div>
+      <div class="form-g">
+        <label>Пароль</label>
+        <input type="password" name="password" placeholder="••••••" required autocomplete="current-password">
+      </div>
+      <button type="submit" class="btn">Войти →</button>
+    </form>
+    <div class="switch">
+      Нет аккаунта? <a href="{{ url_for('register') }}">Зарегистрироваться</a>
+    </div>
+
+  {% else %}
+    <form method="POST" action="{{ url_for('register') }}">
+      <div class="form-g">
+        <label>Логин *</label>
+        <input type="text" name="username" placeholder="min 3 символа" required autofocus autocomplete="username">
+      </div>
+      <div class="form-g">
+        <label>Имя (как отображать)</label>
+        <input type="text" name="display_name" placeholder="Иван Петров" autocomplete="name">
+      </div>
+      <div class="form-g">
+        <label>Пароль *</label>
+        <input type="password" name="password" placeholder="min 4 символа" required autocomplete="new-password">
+      </div>
+      <div class="form-g">
+        <label>Повторите пароль *</label>
+        <input type="password" name="password2" placeholder="••••••" required autocomplete="new-password">
+      </div>
+      <button type="submit" class="btn">Создать аккаунт →</button>
+    </form>
+    <div class="switch">
+      Уже есть аккаунт? <a href="{{ url_for('login') }}">Войти</a>
+    </div>
+  {% endif %}
+</div>
+
+</body>
+</html>

@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% set is_edit = item and item['id'] %}
+{% block header_title %}{{ 'Редактировать' if is_edit else 'Новая позиция' }}{% endblock %}
+{% block header_sub %}Номенклатура{% endblock %}
+{% block header_right %}
+  <a href="{{ url_for('nom_list') }}" class="btn btn-ghost btn-sm">← Назад</a>
+{% endblock %}
+
+{% block content %}
+<div class="card">
+  <form method="POST">
+
+    <div style="display:grid;grid-template-columns:1fr 2fr;gap:10px">
+      <div class="form-g">
+        <label>Код / Артикул</label>
+        <input type="text" name="code" value="{{ item.code if item else '' }}" placeholder="КАБ-3М">
+      </div>
+      <div class="form-g">
+        <label>Наименование *</label>
+        <input type="text" name="name" value="{{ item.name if item else '' }}"
+               placeholder="Кабель 3м, Картридж HP..." required autofocus>
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      <div class="form-g">
+        <label>Единица измерения</label>
+        <select name="unit">
+          {% for u in units %}
+            <option value="{{ u }}" {{ 'selected' if item and item.unit==u }}>{{ u }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="form-g">
+        <label>Мин. остаток (для ⚠️)</label>
+        <input type="number" name="min_qty" step="0.01" min="0"
+               value="{{ item.min_qty if item else 0 }}" placeholder="0">
+      </div>
+    </div>
+
+    {% if not is_edit %}
+    <div class="form-g">
+      <label>Начальный остаток</label>
+      <input type="number" name="init_qty" step="0.01" min="0" value="0">
+      <div class="hint">Будет создан документ «Начальный остаток»</div>
+    </div>
+    {% endif %}
+
+    <div class="form-g">
+      <label>Описание</label>
+      <textarea name="description" placeholder="Дополнительное описание...">{{ item.description if item else '' }}</textarea>
+    </div>
+
+    <div style="display:flex;gap:8px">
+      <a href="{{ url_for('nom_list') }}" class="btn btn-ghost" style="flex:1;justify-content:center">Отмена</a>
+      <button type="submit" class="btn btn-primary" style="flex:2">
+        {{ '💾 Сохранить' if is_edit else '➕ Добавить' }}
+      </button>
+    </div>
+  </form>
+</div>
+
+{% if is_edit %}
+<div style="margin-top:10px">
+  <form method="POST" action="{{ url_for('nom_delete', nom_id=item.id) }}"
+        onsubmit="return confirm('Удалить «{{ item.name }}»?')">
+    <button type="submit" class="btn btn-red btn-full">🗑 Удалить позицию</button>
+  </form>
+</div>
+{% endif %}
+
+{% endblock %}

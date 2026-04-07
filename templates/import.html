@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+{% block header_title %}Импорт данных{% endblock %}
+{% block header_sub %}Резервная копия{% endblock %}
+{% block header_right %}
+  <a href="{{ url_for('profile') }}" class="btn btn-ghost btn-sm">← Назад</a>
+{% endblock %}
+
+{% block content %}
+
+<div class="card" style="text-align:center;padding:20px 16px">
+  <div style="font-size:40px;margin-bottom:8px">📥</div>
+  <div style="font-size:16px;font-weight:700;margin-bottom:4px">Импорт резервной копии</div>
+  <div style="font-size:13px;color:var(--muted)">Загрузите JSON-файл, созданный функцией «Экспорт данных»</div>
+</div>
+
+<div class="card" style="margin-top:10px">
+  <form method="POST" enctype="multipart/form-data">
+
+    <div class="form-g">
+      <label>JSON-файл резервной копии</label>
+      <input type="file" id="bf" name="backup" accept=".json" style="display:none" onchange="showFile(this)">
+      <button type="button" onclick="document.getElementById('bf').click()"
+              style="width:100%;padding:11px;border-radius:8px;font-size:14px;font-weight:700;
+                     cursor:pointer;background:var(--bg);border:1px solid var(--border);
+                     color:var(--text);display:flex;align-items:center;justify-content:center;gap:8px">
+        📂 Выбрать файл
+      </button>
+      <div id="fname" style="font-size:12px;color:var(--muted);margin-top:6px;text-align:center;min-height:18px"></div>
+    </div>
+
+    <div class="form-g">
+      <label>Режим импорта</label>
+      <div style="display:flex;flex-direction:column;gap:8px">
+
+        <label id="lbl-merge"
+               style="display:flex;align-items:center;gap:12px;padding:12px 14px;
+                      border-radius:8px;cursor:pointer;border:1px solid var(--border);
+                      background:var(--bg);transition:border-color .15s,background .15s">
+          <input type="radio" name="mode" value="merge" checked
+                 style="accent-color:var(--accent);width:16px;height:16px;flex-shrink:0"
+                 onchange="updateMode()">
+          <div>
+            <div style="font-size:14px;font-weight:700">🔀 Объединить</div>
+            <div style="font-size:12px;color:var(--muted);margin-top:2px">
+              Добавить данные из файла к существующим. Дубликаты будут пропущены.
+            </div>
+          </div>
+        </label>
+
+        <label id="lbl-replace"
+               style="display:flex;align-items:center;gap:12px;padding:12px 14px;
+                      border-radius:8px;cursor:pointer;border:1px solid var(--border);
+                      background:var(--bg);transition:border-color .15s,background .15s">
+          <input type="radio" name="mode" value="replace"
+                 style="accent-color:#ef4444;width:16px;height:16px;flex-shrink:0"
+                 onchange="updateMode()">
+          <div>
+            <div style="font-size:14px;font-weight:700;color:#f87171">🗑 Заменить</div>
+            <div style="font-size:12px;color:var(--muted);margin-top:2px">
+              Удалить все текущие данные и загрузить из файла.
+              <span style="color:#f87171;font-weight:700">Необратимо!</span>
+            </div>
+          </div>
+        </label>
+
+      </div>
+    </div>
+
+    <button type="submit" id="submit-btn" disabled onclick="return confirmImport()"
+            style="width:100%;padding:13px;border-radius:var(--r);font-size:15px;font-weight:700;
+                   cursor:pointer;border:none;background:var(--accent);color:#fff;
+                   opacity:.4;transition:opacity .15s">
+      📥 Импортировать
+    </button>
+
+  </form>
+</div>
+
+<script>
+function showFile(input) {
+  const name = input.files[0]?.name || '';
+  document.getElementById('fname').textContent = name ? '📄 ' + name : '';
+  const btn = document.getElementById('submit-btn');
+  btn.disabled = !name;
+  btn.style.opacity = name ? '1' : '.4';
+}
+function updateMode() {
+  const merge = document.querySelector('input[value="merge"]').checked;
+  const lm = document.getElementById('lbl-merge');
+  const lr = document.getElementById('lbl-replace');
+  lm.style.borderColor = merge  ? 'var(--accent)' : 'var(--border)';
+  lm.style.background  = merge  ? '#6366f111'     : 'var(--bg)';
+  lr.style.borderColor = !merge ? '#ef4444'        : 'var(--border)';
+  lr.style.background  = !merge ? '#2d0a0a33'      : 'var(--bg)';
+}
+function confirmImport() {
+  if (document.querySelector('input[name="mode"]:checked').value === 'replace')
+    return confirm('ВНИМАНИЕ: Все текущие данные будут удалены. Продолжить?');
+  return true;
+}
+updateMode();
+</script>
+{% endblock %}

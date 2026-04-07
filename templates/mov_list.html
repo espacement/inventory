@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+{% block header_title %}Документы движения{% endblock %}
+{% block header_sub %}{{ moves|length }} документов{% endblock %}
+{% block header_right %}
+  <a href="{{ url_for('mov_add') }}" class="btn btn-primary btn-sm">➕ Создать</a>
+{% endblock %}
+
+{% block content %}
+
+<form method="get" class="searchbar">
+  <input type="text" name="q" value="{{ search }}" placeholder="🔍 Номер документа, товар..." autocomplete="off">
+  <button type="submit" class="btn btn-primary">Найти</button>
+</form>
+
+{# Тип движения #}
+<div class="chips">
+  <a href="{{ url_for('mov_list', q=search, date_from=date_from, date_to=date_to) }}"
+     class="chip {{ 'active' if not type_f }}">Все</a>
+  {% for k, (lbl, clr) in move_types.items() %}
+    <a href="{{ url_for('mov_list', q=search, type=k, date_from=date_from, date_to=date_to) }}"
+       class="chip {{ 'active' if type_f==k }}">{{ lbl }}</a>
+  {% endfor %}
+</div>
+
+{# Период #}
+<form method="get" style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap">
+  <input type="hidden" name="q" value="{{ search }}">
+  <input type="hidden" name="type" value="{{ type_f }}">
+  <div style="display:flex;gap:6px;align-items:center;flex:1;min-width:200px">
+    <input type="date" name="date_from" value="{{ date_from }}"
+           style="flex:1;background:var(--surf);border:1px solid var(--border);
+                  border-radius:8px;color:var(--text);padding:8px 10px;font-size:14px;outline:none">
+    <span style="color:var(--muted)">—</span>
+    <input type="date" name="date_to" value="{{ date_to }}"
+           style="flex:1;background:var(--surf);border:1px solid var(--border);
+                  border-radius:8px;color:var(--text);padding:8px 10px;font-size:14px;outline:none">
+  </div>
+  <button type="submit" class="btn btn-ghost">Применить</button>
+</form>
+
+{% if moves %}
+<div class="list" style="align-items:stretch">
+  {% set dot_colors = {'receipt':'var(--green)','expense':'var(--orange)','writeoff':'var(--red)','return':'var(--purple)'} %}
+  {% for m in moves %}
+  <div style="background:var(--surf);border:1px solid var(--border);border-radius:var(--r);
+              overflow:hidden;display:flex;flex-direction:column">
+
+    {# ── Тело карточки ── #}
+    <div style="display:flex;align-items:flex-start;gap:10px;padding:14px;flex:1">
+      <div style="width:8px;height:8px;border-radius:50%;flex-shrink:0;margin-top:5px;
+                  background:{{ dot_colors.get(m.move_type,'var(--muted)') }}"></div>
+      <div style="flex:1;min-width:0">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
+          <div>
+            <span style="font-weight:700;font-size:13px">
+              {{ move_types[m.move_type][0] if m.move_type in move_types else m.move_type }}
+            </span>
+            <span style="font-size:11px;color:var(--muted);margin-left:6px">{{ m.doc_num }}</span>
+          </div>
+          <div style="font-size:16px;font-weight:800;white-space:nowrap;
+                      color:{{ dot_colors.get(m.move_type,'var(--text)') }}">
+            {{ m.quantity|int if m.quantity == m.quantity|int else m.quantity }} {{ m.nom_unit }}
+          </div>
+        </div>
+        <div style="font-size:13px;font-weight:600;margin-top:3px">{{ m.nom_name }}</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:2px">{{ m.created_at[:16] }}</div>
+        {% if m.comment %}
+          <div style="font-size:11px;color:var(--muted);font-style:italic;margin-top:2px">💬 {{ m.comment }}</div>
+        {% endif %}
+      </div>
+    </div>
+
+    {# ── Кнопка всегда снизу ── #}
+    <div style="border-top:1px solid var(--border);padding:8px 12px">
+      <form method="POST" action="{{ url_for('mov_delete', mov_id=m.id) }}"
+            onsubmit="return confirm('Отменить документ {{ m.doc_num }}? Остаток будет скорректирован.')">
+        <button type="submit"
+                style="width:100%;padding:7px;border-radius:8px;font-size:12px;font-weight:700;
+                       cursor:pointer;color:#f87171;background:#2d0a0a22;
+                       border:1px solid #ef444433;display:flex;align-items:center;
+                       justify-content:center;gap:5px">
+          ↩️ Отменить
+        </button>
+      </form>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% else %}
+<div class="empty">
+  <div class="icon">📭</div>
+  <p>Документов нет</p>
+  <a href="{{ url_for('mov_add') }}" class="btn btn-primary">➕ Создать первый</a>
+</div>
+{% endif %}
+
+{% endblock %}
